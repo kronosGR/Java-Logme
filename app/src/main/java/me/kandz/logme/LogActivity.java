@@ -3,8 +3,10 @@ package me.kandz.logme;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -16,12 +18,19 @@ import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
+import me.kandz.logme.Database.ExtrasAdapter;
+import me.kandz.logme.Database.LogContract;
+import me.kandz.logme.Database.LogContract.ExtrasEntry;
 import me.kandz.logme.Database.LogContract.LogsEntry;
 import me.kandz.logme.Database.LogSqlLiteOpenHelper;
+import me.kandz.logme.Utils.Extras;
+import me.kandz.logme.Utils.Utils;
 
 public class LogActivity extends AppCompatActivity {
 
+    public static final int REQUEST_CODE_AUDIO_ACTIVITY = 1;
     private TextView dateTxt;
     private TextView timeTxt;
     private TextView dayTxt;
@@ -32,10 +41,8 @@ public class LogActivity extends AppCompatActivity {
     private ImageButton imageBtn;
     private ImageButton audioBtn;
     private RecyclerView recyclerView;
-    private String day;
-    private String date;
-    private String time;
     private long rowID;
+    private ExtrasAdapter extrasAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,9 +58,9 @@ public class LogActivity extends AppCompatActivity {
      */
     private void createNewRecord() {
         ContentValues values = new ContentValues();
-        values.put(LogsEntry.COL_DATO, date);
-        values.put(LogsEntry.COL_DAY, day);
-        values.put(LogsEntry.COL_TIME,time);
+        values.put(LogsEntry.COL_DATO, dateTxt.getText().toString());
+        values.put(LogsEntry.COL_DAY, dayTxt.getText().toString());
+        values.put(LogsEntry.COL_TIME, timeTxt.getText().toString());
         values.put(LogsEntry.COL_IMAGE, "FALSE");
         values.put(LogsEntry.COL_VIDEO, "FALSE");
         values.put(LogsEntry.COL_SOUND, "FALSE");
@@ -79,7 +86,9 @@ public class LogActivity extends AppCompatActivity {
         audioBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(AudioActivity.makeIntent(getApplicationContext()));
+                if (Utils.hasMicrophone(getApplicationContext())) {
+                    startActivityForResult(AudioActivity.makeIntent(getApplicationContext()), REQUEST_CODE_AUDIO_ACTIVITY);
+                }
             }
         });
 
@@ -105,6 +114,41 @@ public class LogActivity extends AppCompatActivity {
         });
 
         updateDateTimeDay();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (requestCode == REQUEST_CODE_AUDIO_ACTIVITY){
+            if (resultCode == RESULT_OK){
+                String filename = data.getData().toString();
+                ContentValues values = new ContentValues();
+                values.put(ExtrasEntry.COL_LOG_ID, rowID);
+                values.put(ExtrasEntry.COL_TYPE_ID, 2); // 2 Audio
+                values.put(ExtrasEntry.COL_URL, filename);
+                values.put(ExtrasEntry.COL_DATO, Utils.getDate());
+                values.put(ExtrasEntry.COL_TIME, Utils.getTime());
+                long extraID = LogSqlLiteOpenHelper.getInstance(this).insertToTable(ExtrasEntry.TABLE_NAME, values );
+
+                updateRecycleView();
+
+                values = null;
+                values.put(LogsEntry.COL_SOUND, "TRUE");
+                int rows = LogSqlLiteOpenHelper.getInstance(this).updateTable(LogsEntry.TABLE_NAME,
+                        values, LogsEntry._ID, new String[] {Long.toString(rowID)});
+            }
+        }
+    }
+
+    /**
+     * update the recyclew view.
+     */
+    private void updateRecycleView() {
+        final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(linearLayoutManager);
+        List<Extras> extras = LogSqlLiteOpenHelper.getInstance(this).readExtras(rowID);
+        extrasAdapter = new ExtrasAdapter(this, extras);
+        recyclerView.setAdapter(extrasAdapter);
+
     }
 
     @Override
@@ -135,20 +179,11 @@ public class LogActivity extends AppCompatActivity {
      * set the time, day and date on the activity
      */
     private void updateDateTimeDay() {
-        Date d = new Date();
+        dayTxt.setText(Utils.getDay());
 
+        dateTxt.setText(Utils.getDate());
 
-        SimpleDateFormat sdf = new SimpleDateFormat("E");
-        day = sdf.format(d);
-        dayTxt.setText(day);
-
-        sdf = new SimpleDateFormat("d MMM yyyy");
-        date = sdf.format(d);
-        dateTxt.setText(date);
-
-        sdf = new SimpleDateFormat("HH:mm:ss");
-        time = sdf.format(d);
-        timeTxt.setText(time);
+        timeTxt.setText(Utils.getTime());
     }
 
     /**

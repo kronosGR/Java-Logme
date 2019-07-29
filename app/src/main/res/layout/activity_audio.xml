@@ -6,4 +6,91 @@
     android:layout_height="match_parent"
     tools:context=".AudioActivity">
 
+    <Chronometer
+        android:id="@+id/chronometerView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="8dp"
+        android:textAlignment="center"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="60sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <FrameLayout
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/chronometerView">
+
+        <ImageView
+            android:id="@+id/recordImageView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="128dp"
+            android:layout_marginTop="32dp"
+            android:layout_marginEnd="128dp"
+            android:layout_marginBottom="8dp"
+            android:alpha="0.2"
+            android:clickable="true"
+            android:minWidth="100dp"
+            android:src="@drawable/ic_mic_black_24dp"
+            android:tint="@android:color/holo_blue_light" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="32dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <ImageView
+            android:id="@+id/playImageView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="32dp"
+            android:layout_marginBottom="32dp"
+            android:clickable="false"
+            android:minWidth="150dp"
+            android:minHeight="150dp"
+            android:src="@drawable/ic_play__black_24dp"
+            android:tint="@android:color/holo_red_dark"
+            android:visibility="invisible"
+            tools:visibility="invisible" />
+
+        <ImageView
+            android:id="@+id/saveImageView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="32dp"
+            android:layout_marginBottom="8dp"
+            android:clickable="false"
+            android:minWidth="150dp"
+            android:minHeight="150dp"
+            android:src="@drawable/ic_save_black_24dp"
+            android:tint="@android:color/holo_green_dark"
+            android:visibility="invisible"
+            tools:visibility="invisible" />
+    </LinearLayout>
+
 </android.support.constraint.ConstraintLayout>

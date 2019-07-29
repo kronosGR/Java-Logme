@@ -121,7 +121,7 @@
                 android:id="@+id/soundImageButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:srcCompat="@drawable/ic_sound_black_24dp" />
+                app:srcCompat="@drawable/ic_mic_black_24dp" />
 
             <ImageButton
                 android:id="@+id/pictureImageButton"
@@ -155,5 +155,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/cardView2" />
+        app:layout_constraintTop_toBottomOf="@+id/cardView2"
+        tools:listitem="@layout/extras_list_item" />
 </android.support.constraint.ConstraintLayout>
