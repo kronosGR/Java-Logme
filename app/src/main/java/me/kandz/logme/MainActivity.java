@@ -1,8 +1,10 @@
 package me.kandz.logme;
 
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.support.v4.view.GravityCompat;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -14,10 +16,19 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import me.kandz.logme.Database.LogContract.LogsEntry;
 import me.kandz.logme.Database.LogSqlLiteOpenHelper;
+import me.kandz.logme.Database.LogsAdapter;
+import me.kandz.logme.Utils.Logs;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+
+    private RecyclerView recyclerView;
+    private LogsAdapter logsAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,7 +41,7 @@ public class MainActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-               startActivity(LogActivity.makeIntent(getApplicationContext()));
+               startActivity(LogActivity.makeIntentForUpdate(getApplicationContext()));
             }
         });
 
@@ -43,6 +54,58 @@ public class MainActivity extends AppCompatActivity
         drawer.addDrawerListener(toggle);
         toggle.syncState();
         navigationView.setNavigationItemSelectedListener(this);
+
+        initializeRecyclerView();
+    }
+
+    /**
+     * initialiaze the recycler view
+     */
+    private void initializeRecyclerView() {
+        recyclerView = (RecyclerView) findViewById(R.id.logsRecyclerView);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(linearLayoutManager);
+
+        List<Logs> logs = new ArrayList<>();
+        Cursor cursor = LogSqlLiteOpenHelper.getInstance(this).getTable(LogsEntry.TABLE_NAME, LogsEntry._ID, "DESC");
+
+        int idPOS = cursor.getColumnIndex(LogsEntry._ID);
+        int titlePOS = cursor.getColumnIndex(LogsEntry.COL_TITLE);
+        int detailsPOS = cursor.getColumnIndex(LogsEntry.COL_DETAILS);
+        int dayPOS = cursor.getColumnIndex(LogsEntry.COL_DAY);
+        int datePOS = cursor.getColumnIndex(LogsEntry.COL_DATO);
+        int timePOS = cursor.getColumnIndex(LogsEntry.COL_TIME);
+        int audioPOS = cursor.getColumnIndex(LogsEntry.COL_AUDIO);
+        int imagePOS = cursor.getColumnIndex(LogsEntry.COL_IMAGE);
+        int videoPOS = cursor.getColumnIndex(LogsEntry.COL_VIDEO);
+        int locationPOS = cursor.getColumnIndex(LogsEntry.COL_LOCATION);
+
+        while (cursor.moveToNext()){
+
+            boolean location = cursor.getString(locationPOS).equals("TRUE");
+            boolean audio = cursor.getString(audioPOS).equals("TRUE");
+            boolean image = cursor.getString(imagePOS).equals("TRUE");
+            boolean video = cursor.getString(videoPOS).equals("TRUE");
+            Logs tmpLog = new Logs(
+                    cursor.getInt(idPOS),
+                    cursor.getString(titlePOS),
+                    cursor.getString(detailsPOS),
+                    cursor.getString(dayPOS),
+                    cursor.getString(datePOS),
+                    cursor.getString(timePOS),
+                    image, audio, video, location);
+
+            logs.add(tmpLog);
+        }
+
+        logsAdapter = new LogsAdapter(this, logs);
+        recyclerView.setAdapter(logsAdapter);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        initializeRecyclerView();
     }
 
     @Override
@@ -70,7 +133,8 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_close) {
+            finish();
             return true;
         }
 

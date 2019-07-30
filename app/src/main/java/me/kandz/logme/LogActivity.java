@@ -4,33 +4,36 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.support.annotation.Nullable;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 import me.kandz.logme.Database.ExtrasAdapter;
-import me.kandz.logme.Database.LogContract;
 import me.kandz.logme.Database.LogContract.ExtrasEntry;
 import me.kandz.logme.Database.LogContract.LogsEntry;
 import me.kandz.logme.Database.LogSqlLiteOpenHelper;
+import me.kandz.logme.Database.SwipeToDelete;
 import me.kandz.logme.Utils.Extras;
+import me.kandz.logme.Utils.Logs;
 import me.kandz.logme.Utils.Utils;
 
 public class LogActivity extends AppCompatActivity {
 
     public static final int REQUEST_CODE_AUDIO_ACTIVITY = 1;
+    public static final String LOGS_OBJECT = "logs_object";
     private TextView dateTxt;
     private TextView timeTxt;
     private TextView dayTxt;
@@ -43,14 +46,39 @@ public class LogActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private long rowID;
     private ExtrasAdapter extrasAdapter;
+    private boolean updateLog;
+    private Logs updateLogs;
+    private ConstraintLayout constraintLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log);
 
-        intializeActivity();
-        createNewRecord();
+        Intent intent = getIntent();
+        if (intent.getParcelableExtra(LOGS_OBJECT) !=null){
+            updateLog = true;
+            updateLogs = intent.getParcelableExtra(LOGS_OBJECT);
+            intializeActivity();
+            updateValues();
+        } else {
+            intializeActivity();
+            createNewRecord();
+        }
+    }
+
+    /**
+     * update the Activity when it is opened for updateing
+     */
+    private void updateValues() {
+        dateTxt.setText(updateLogs.getDato());
+        dayTxt.setText(updateLogs.getDay());
+        timeTxt.setText(updateLogs.getTime());
+        titleEdit.setText(updateLogs.getTitle());
+        detailsEdit.setText(updateLogs.getDetails());
+
+        rowID = updateLogs.getID();
+        updateRecycleView();
     }
 
     /**
@@ -63,7 +91,7 @@ public class LogActivity extends AppCompatActivity {
         values.put(LogsEntry.COL_TIME, timeTxt.getText().toString());
         values.put(LogsEntry.COL_IMAGE, "FALSE");
         values.put(LogsEntry.COL_VIDEO, "FALSE");
-        values.put(LogsEntry.COL_SOUND, "FALSE");
+        values.put(LogsEntry.COL_AUDIO, "FALSE");
         values.put(LogsEntry.COL_LOCATION, "FALSE");
         rowID = LogSqlLiteOpenHelper.getInstance(this).insertToTable(LogsEntry.TABLE_NAME,  values);
     }
@@ -72,6 +100,7 @@ public class LogActivity extends AppCompatActivity {
      * get the view references and setonclick listeners to the buttons
      */
     private void intializeActivity() {
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
         dateTxt = (TextView) findViewById(R.id.dateTextView);
         dayTxt = (TextView)findViewById(R.id.dayTextView);
         timeTxt = (TextView) findViewById(R.id.timeTextView);
@@ -82,6 +111,7 @@ public class LogActivity extends AppCompatActivity {
         videoBtn = (ImageButton) findViewById(R.id.videoImageButton);
         locationBtn = (ImageButton) findViewById(R.id.locationImageButton);
         recyclerView = (RecyclerView) findViewById(R.id.logRecyclerView);
+        constraintLayout = (ConstraintLayout) findViewById(R.id.con_layout);
 
         audioBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -131,8 +161,8 @@ public class LogActivity extends AppCompatActivity {
 
                 updateRecycleView();
 
-                values = null;
-                values.put(LogsEntry.COL_SOUND, "TRUE");
+                values.clear();
+                values.put(LogsEntry.COL_AUDIO, "TRUE");
                 int rows = LogSqlLiteOpenHelper.getInstance(this).updateTable(LogsEntry.TABLE_NAME,
                         values, LogsEntry._ID, new String[] {Long.toString(rowID)});
             }
@@ -146,7 +176,9 @@ public class LogActivity extends AppCompatActivity {
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(linearLayoutManager);
         List<Extras> extras = LogSqlLiteOpenHelper.getInstance(this).readExtras(rowID);
-        extrasAdapter = new ExtrasAdapter(this, extras);
+        extrasAdapter = new ExtrasAdapter(this, extras, constraintLayout);
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new SwipeToDelete(extrasAdapter));
+        itemTouchHelper.attachToRecyclerView(recyclerView);
         recyclerView.setAdapter(extrasAdapter);
 
     }
@@ -161,14 +193,23 @@ public class LogActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
             case R.id.log_menu_save:
-                //TODO  update the record show a message and close the activity
                 Toast.makeText(this, "Log updated.", Toast.LENGTH_LONG).show();
+                ContentValues values = new ContentValues();
+                values.put(LogsEntry.COL_TITLE, titleEdit.getText().toString());
+                values.put(LogsEntry.COL_DETAILS, detailsEdit.getText().toString());
+                LogSqlLiteOpenHelper.getInstance(this).updateTable(LogsEntry.TABLE_NAME,
+                        values,LogsEntry._ID, new String [] {Long.toString(rowID)});
                 finish();
                 return true;
             case R.id.log_menu_cancel:
-                //TODO get the list of the extras and delete them one by one
-                LogSqlLiteOpenHelper.getInstance(this).deleteRecord(LogsEntry.TABLE_NAME, LogsEntry._ID, new String[] {Long.toString(rowID)});
-                Toast.makeText(this, "Log cancelled and deleted.", Toast.LENGTH_LONG).show();
+                if (!updateLog) {
+                    //LogSqlLiteOpenHelper.getInstance(this).deleteRecord(LogsEntry.TABLE_NAME, LogsEntry._ID, new String[]{Long.toString(rowID)});
+                    //Toast.makeText(this, "Log cancelled and deleted.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "Changes haven't been changed.", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    Toast.makeText(this, "Changes haven't been changed.", Toast.LENGTH_SHORT).show();
+                }
                 finish();
                 return true;
         }
@@ -191,7 +232,21 @@ public class LogActivity extends AppCompatActivity {
      * @param context
      * @return the intent
      */
-    public static Intent makeIntent(Context context){
+    public static Intent makeIntentForUpdate(Context context){
         return new Intent(context, LogActivity.class);
     }
+
+    /**
+     * create an intent passing as extra a logs object
+     * @param context
+     * @param log that will be passed as extra
+     * @return the created intent
+     */
+    public static Intent makeIntentForUpdate(Context context, Logs log){
+        Intent intent = new Intent(context, LogActivity.class);
+        intent.putExtra(LOGS_OBJECT, log);
+        return intent;
+    }
+
+
 }

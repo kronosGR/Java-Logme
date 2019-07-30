@@ -1,6 +1,10 @@
 package me.kandz.logme.Utils;
 
-public class Logs {
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.util.Log;
+
+public class Logs implements Parcelable {
 
     private int ID;
     private String title;
@@ -8,23 +12,36 @@ public class Logs {
     private String dato;
     private String day;
     private String time;
-    private Boolean picture;
-    private Boolean Sound;
-    private Boolean Video;
-    private Boolean Location;
+    private Boolean image;
+    private Boolean audio;
+    private Boolean video;
+    private Boolean location;
 
-    public Logs(int ID, String title, String details, String dato, String day, String time, Boolean picture,
-                Boolean sound, Boolean video, Boolean location) {
+    public Logs(int ID, String title, String details, String dato, String day, String time, Boolean image,
+                Boolean audio, Boolean video, Boolean location) {
         this.ID = ID;
         this.title = title;
         this.details = details;
         this.dato = dato;
         this.day = day;
         this.time = time;
-        this.picture = picture;
-        Sound = sound;
-        Video = video;
-        Location = location;
+        this.image = image;
+        this.audio = audio;
+        this.video = video;
+        this.location = location;
+    }
+
+    public Logs(Parcel parcel) {
+        ID = parcel.readInt();
+        title = parcel.readString();
+        details = parcel.readString();
+        dato = parcel.readString();
+        day = parcel.readString();
+        time = parcel.readString();
+        image = parcel.readString().equals("TRUE");
+        audio = parcel.readString().equals("TRUE");
+        video = parcel.readString().equals("TRUE");
+        location = parcel.readString().equals("TRUE");
     }
 
     public int getID() {
@@ -75,35 +92,67 @@ public class Logs {
         this.time = time;
     }
 
-    public Boolean getPicture() {
-        return picture;
+    public Boolean getImage() {
+        return image;
     }
 
-    public void setPicture(Boolean picture) {
-        this.picture = picture;
+    public void setImage(Boolean image) {
+        this.image = image;
     }
 
-    public Boolean getSound() {
-        return Sound;
+    public Boolean getAudio() {
+        return audio;
     }
 
-    public void setSound(Boolean sound) {
-        Sound = sound;
+    public void setAudio(Boolean audio) {
+        this.audio = audio;
     }
 
     public Boolean getVideo() {
-        return Video;
+        return video;
     }
 
     public void setVideo(Boolean video) {
-        Video = video;
+        this.video = video;
     }
 
     public Boolean getLocation() {
-        return Location;
+        return location;
     }
 
     public void setLocation(Boolean location) {
-        Location = location;
+        this.location = location;
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeInt(ID);
+        parcel.writeString(title);
+        parcel.writeString(details);
+        parcel.writeString(dato);
+        parcel.writeString(day);
+        parcel.writeString(time);
+        parcel.writeString(image ? "TRUE" : "FALSE");
+        parcel.writeString(audio ? "TRUE" : "FALSE");
+        parcel.writeString(video ? "TRUE" : "FALSE");
+        parcel.writeString(location ? "TRUE" : "FALSE");
+    }
+
+    public final static Parcelable.Creator<Logs> CREATOR = new Parcelable.Creator<Logs>(){
+
+        @Override
+        public Logs createFromParcel(Parcel parcel) {
+            return new Logs(parcel);
+        }
+
+        @Override
+        public Logs[] newArray(int i) {
+            return new Logs[i];
+        }
+    };
 }

@@ -28,6 +28,7 @@ import java.io.IOException;
 public class AudioActivity extends AppCompatActivity {
 
     public static final int REQUEST_AUDIO_RECORD_CODE = 123;
+    public static final String AUDIO_URL = "audio_url";
     private Chronometer chronometer;
     private ImageView recordBtn;
     private boolean recording;
@@ -43,9 +44,19 @@ public class AudioActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_audio);
 
-        initViews();
-        checkPermissionsForAudio();
+        Intent intent = getIntent();
+        if (intent.getStringExtra(AUDIO_URL) != null){
+            filename = intent.getStringExtra(AUDIO_URL);
+            //play the audio file
+            initViewsForPlaying();
+        }
+        else{
+            //open the activity for recording
+            initViews();
+            checkPermissionsForAudio();
+        }
     }
+
 
     /**
      * check if record_audio, read_external_storaga and write_external_storage are granted
@@ -56,7 +67,6 @@ public class AudioActivity extends AppCompatActivity {
             || ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
             || ContextCompat.checkSelfPermission(this,Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
 
-            //TODO Check why button is not enabled
             disableRecordButton();
             requestPermissions(new String[] {
                     Manifest.permission.RECORD_AUDIO,
@@ -68,6 +78,7 @@ public class AudioActivity extends AppCompatActivity {
         }
     }
 
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (requestCode == REQUEST_AUDIO_RECORD_CODE) {
@@ -77,7 +88,7 @@ public class AudioActivity extends AppCompatActivity {
 
                 enableRecordButton();
             } else {
-                Toast.makeText(this, "You must give the permissions so the app can record audio", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "You must give the permissions so the app can record audio", Toast.LENGTH_SHORT).show();
                 finish();
             }
 
@@ -127,6 +138,39 @@ public class AudioActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    /**
+     * initialize the view for playing
+     */
+    private void initViewsForPlaying() {
+        chronometer = (Chronometer) findViewById(R.id.chronometerView);
+        playBtn = (ImageView) findViewById(R.id.playImageView);
+        playBtn.setVisibility(View.VISIBLE);
+        playBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //Play the recorded audio
+                if (!isPlaying && filename != null)
+                    playAudio();
+                else
+                    stopAudio();
+            }
+
+        });
+
+        saveBtn = (ImageView) findViewById(R.id.saveImageView);
+        saveBtn.setVisibility(View.VISIBLE);
+        saveBtn.setImageResource(R.drawable.ic_cancel_black_24dp);
+        saveBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                finish();
+            }
+        });
+
+        recordBtn = (ImageView) findViewById(R.id.recordImageView);
+        recordBtn.setVisibility(View.INVISIBLE);
     }
 
     /**
@@ -183,7 +227,7 @@ public class AudioActivity extends AppCompatActivity {
      * stop recordiong audio
      */
     private void stopRecording() {
-        Toast.makeText(getApplicationContext(), "Recording stopped and saved", Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(), "Recording stopped and saved", Toast.LENGTH_SHORT).show();
         enableRecordButton();
         enablePlaySaveButtons();
 
@@ -199,7 +243,7 @@ public class AudioActivity extends AppCompatActivity {
         chronometer.stop();
         recording = false;
 
-        Toast.makeText(getApplicationContext(), "You can play the recording or save it and return", Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(), "You can play the recording or save it and return", Toast.LENGTH_SHORT).show();
     }
 
     /**
@@ -208,7 +252,7 @@ public class AudioActivity extends AppCompatActivity {
     private void startRecording() {
 
         recording = true;
-        Toast.makeText(getApplicationContext(), "Start recording... Click the microphone to stop.", Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(), "Start recording... Click the microphone to stop.", Toast.LENGTH_SHORT).show();
         disableRecordButton();
         disablePlaySaveButtons();
 
@@ -287,5 +331,17 @@ public class AudioActivity extends AppCompatActivity {
      */
     public static Intent makeIntent(Context context){
         return new Intent(context, AudioActivity.class);
+    }
+
+    /**
+     * make the intent to play for this activity
+     * @param context
+     * @param url
+     * @return the intent
+     */
+    public static Intent makeIntentForPlaying(Context context, String url){
+        Intent intent = new Intent(context, AudioActivity.class);
+        intent.putExtra(AUDIO_URL, url);
+        return intent;
     }
 }

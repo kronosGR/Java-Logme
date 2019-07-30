@@ -41,8 +41,8 @@ public class LogContract {
         public static final String COL_DATO = "dato";
         public static final String COL_DAY = "day";
         public static final String COL_TIME = "time";
-        public static final String COL_IMAGE = "picture";
-        public static final String COL_SOUND = "sound";
+        public static final String COL_IMAGE = "image";
+        public static final String COL_AUDIO = "audio";
         public static final String COL_VIDEO = "video";
         public static final String COL_LOCATION = "location";
         public static final String SQL_CREATE_TABLE =
@@ -54,7 +54,7 @@ public class LogContract {
                 + COL_DAY + " TEXT, "
                 + COL_TIME + " TEXT, "
                 + COL_IMAGE + " TEXT, "
-                + COL_SOUND + " TEXT, "
+                + COL_AUDIO + " TEXT, "
                 + COL_VIDEO + " TEXT, "
                 + COL_LOCATION + " TEXT)";
     }
