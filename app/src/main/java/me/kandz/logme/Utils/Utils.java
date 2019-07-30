@@ -19,6 +19,16 @@ public class Utils {
     }
 
     /**
+     * checks if the device has camera
+     * @param context
+     * @return true if it has microphone
+     */
+    public static boolean hasCamera(Context context){
+        PackageManager packageManager = context.getPackageManager();
+        return packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA);
+    }
+
+    /**
      * returns the current time
      * @return
      */

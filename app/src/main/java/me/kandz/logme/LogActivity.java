@@ -19,6 +19,9 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import me.kandz.logme.Database.ExtrasAdapter;
@@ -34,6 +37,7 @@ public class LogActivity extends AppCompatActivity {
 
     public static final int REQUEST_CODE_AUDIO_ACTIVITY = 1;
     public static final String LOGS_OBJECT = "logs_object";
+    public static final int REQUEST_CODE_IMAGE_ACTIVITY = 2;
     private TextView dateTxt;
     private TextView timeTxt;
     private TextView dayTxt;
@@ -118,6 +122,8 @@ public class LogActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if (Utils.hasMicrophone(getApplicationContext())) {
                     startActivityForResult(AudioActivity.makeIntent(getApplicationContext()), REQUEST_CODE_AUDIO_ACTIVITY);
+                } else {
+                    Toast.makeText(getApplicationContext(), "Your device does not have a microphone", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -125,7 +131,11 @@ public class LogActivity extends AppCompatActivity {
         imageBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                if (Utils.hasCamera(getApplicationContext())){
+                    startActivityForResult(ImageActivity.makeIntent(getApplicationContext()), REQUEST_CODE_IMAGE_ACTIVITY);
+                } else {
+                    Toast.makeText(getApplicationContext(), "Your device does not have a camera", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -166,6 +176,24 @@ public class LogActivity extends AppCompatActivity {
                 int rows = LogSqlLiteOpenHelper.getInstance(this).updateTable(LogsEntry.TABLE_NAME,
                         values, LogsEntry._ID, new String[] {Long.toString(rowID)});
             }
+        } else if (requestCode == REQUEST_CODE_IMAGE_ACTIVITY) {
+            if (resultCode == RESULT_OK){
+                String filename = data.getData().toString();
+                ContentValues values = new ContentValues();
+                values.put(ExtrasEntry.COL_LOG_ID , rowID);
+                values.put(ExtrasEntry.COL_TYPE_ID, 1);  // 1 Image
+                values.put(ExtrasEntry.COL_URL, filename);
+                values.put(ExtrasEntry.COL_DATO, Utils.getDate());
+                values.put(ExtrasEntry.COL_TIME, Utils.getTime());
+                long extraID = LogSqlLiteOpenHelper.getInstance(this).insertToTable(ExtrasEntry.TABLE_NAME, values);
+
+                updateRecycleView();
+
+                values.clear();
+                values.put(LogsEntry.COL_IMAGE, "TRUE");
+                int rows = LogSqlLiteOpenHelper.getInstance(this).updateTable(LogsEntry.TABLE_NAME,
+                        values, LogsEntry._ID, new String[] { Long.toString(rowID)});
+            }
         }
     }
 
@@ -205,16 +233,17 @@ public class LogActivity extends AppCompatActivity {
                 if (!updateLog) {
                     //LogSqlLiteOpenHelper.getInstance(this).deleteRecord(LogsEntry.TABLE_NAME, LogsEntry._ID, new String[]{Long.toString(rowID)});
                     //Toast.makeText(this, "Log cancelled and deleted.", Toast.LENGTH_LONG).show();
-                    Toast.makeText(this, "Changes haven't been changed.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Text changes haven't been saved.", Toast.LENGTH_SHORT).show();
                 }
                 else {
-                    Toast.makeText(this, "Changes haven't been changed.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Text changes haven't been saved.", Toast.LENGTH_SHORT).show();
                 }
                 finish();
                 return true;
         }
         return false;
     }
+
 
     /**
      * set the time, day and date on the activity

@@ -3,8 +3,9 @@
     package="me.kandz.logme">
 
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CAMERA"/>
 
     <application
         android:allowBackup="true"
@@ -13,10 +14,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".AudioActivity"
-            android:label="Audio"></activity>
-        <activity android:name=".LogActivity"
-            android:label="@string/log_activity_label"/>
+        <activity android:name=".ImageActivity"
+            android:label="Image"></activity>
+        <activity
+            android:name=".AudioActivity"
+            android:label="Audio" />
+        <activity
+            android:name=".LogActivity"
+            android:label="@string/log_activity_label" />
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"

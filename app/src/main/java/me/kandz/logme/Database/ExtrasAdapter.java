@@ -2,7 +2,9 @@ package me.kandz.logme.Database;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.Snackbar;
@@ -20,6 +22,7 @@ import java.util.List;
 import me.kandz.logme.AudioActivity;
 import me.kandz.logme.Database.LogContract.ExtrasEntry;
 import me.kandz.logme.Database.LogContract.LogsEntry;
+import me.kandz.logme.ImageActivity;
 import me.kandz.logme.LogActivity;
 import me.kandz.logme.R;
 import me.kandz.logme.Utils.Extras;
@@ -76,7 +79,14 @@ public class ExtrasAdapter extends RecyclerView.Adapter<ExtrasAdapter.ViewHolder
         viewHolder.extrasCardView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                context.startActivity(AudioActivity.makeIntentForPlaying(context, extra.getUrl()));
+                switch (extra.getTypeID()){
+                    case 1: //IMAGE
+                        context.startActivity(ImageActivity.makeIntentForShowing(context, extra.getUrl()));
+                        break;
+                    case 2: //AUDIO
+                        context.startActivity(AudioActivity.makeIntentForPlaying(context, extra.getUrl()));
+                        break;
+                }
             }
         });
     }
