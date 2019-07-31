@@ -26,6 +26,7 @@ import me.kandz.logme.ImageActivity;
 import me.kandz.logme.LogActivity;
 import me.kandz.logme.R;
 import me.kandz.logme.Utils.Extras;
+import me.kandz.logme.VideoActivity;
 
 public class ExtrasAdapter extends RecyclerView.Adapter<ExtrasAdapter.ViewHolder> {
 
@@ -69,7 +70,7 @@ public class ExtrasAdapter extends RecyclerView.Adapter<ExtrasAdapter.ViewHolder
                 viewHolder.typeImageView.setImageResource(R.drawable.ic_mic_black_24dp);
                 break;
             case 3:
-                viewHolder.typeImageView.setImageResource(R.drawable.ic_image_black_24dp);
+                viewHolder.typeImageView.setImageResource(R.drawable.ic_video_black_24dp);
                 break;
             case 4:
                 viewHolder.typeImageView.setImageResource(R.drawable.ic_location_black_24dp);
@@ -85,6 +86,12 @@ public class ExtrasAdapter extends RecyclerView.Adapter<ExtrasAdapter.ViewHolder
                         break;
                     case 2: //AUDIO
                         context.startActivity(AudioActivity.makeIntentForPlaying(context, extra.getUrl()));
+                        break;
+                    case 3: //VIDEO
+                        context.startActivity(VideoActivity.makeIntentToPlayVideo(context, extra.getUrl()));
+                        break;
+                    case 4: //LOCATION
+
                         break;
                 }
             }

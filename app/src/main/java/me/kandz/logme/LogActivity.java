@@ -38,6 +38,7 @@ public class LogActivity extends AppCompatActivity {
     public static final int REQUEST_CODE_AUDIO_ACTIVITY = 1;
     public static final String LOGS_OBJECT = "logs_object";
     public static final int REQUEST_CODE_IMAGE_ACTIVITY = 2;
+    public static final int REQUEST_CODE_VIDEO_ACTIVITY = 3;
     private TextView dateTxt;
     private TextView timeTxt;
     private TextView dayTxt;
@@ -142,14 +143,18 @@ public class LogActivity extends AppCompatActivity {
         videoBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                if (Utils.hasCamera(getApplicationContext())){
+                    startActivityForResult(VideoActivity.makeIntent(getApplicationContext() ), REQUEST_CODE_VIDEO_ACTIVITY);
+                } else {
+                    Toast.makeText(getApplicationContext(), "Your device does not have a camera", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
         locationBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                //TODO check for gps
             }
         });
 
@@ -193,6 +198,25 @@ public class LogActivity extends AppCompatActivity {
                 values.put(LogsEntry.COL_IMAGE, "TRUE");
                 int rows = LogSqlLiteOpenHelper.getInstance(this).updateTable(LogsEntry.TABLE_NAME,
                         values, LogsEntry._ID, new String[] { Long.toString(rowID)});
+            }
+        }
+        else if (requestCode == REQUEST_CODE_VIDEO_ACTIVITY){
+            if (resultCode == RESULT_OK){
+                String filename = data.getData().toString();
+                ContentValues values = new ContentValues();
+                values.put(ExtrasEntry.COL_LOG_ID, rowID);
+                values.put(ExtrasEntry.COL_TYPE_ID, 3);  //Video
+                values.put(ExtrasEntry.COL_URL, filename);
+                values.put(ExtrasEntry.COL_DATO, Utils.getDate());
+                values.put(ExtrasEntry.COL_TIME, Utils.getTime());
+                long extraID = LogSqlLiteOpenHelper.getInstance(this).insertToTable(ExtrasEntry.TABLE_NAME, values);
+
+                updateRecycleView();
+
+                values.clear();
+                values.put(LogsEntry.COL_VIDEO, "TRUE");
+                int rows = LogSqlLiteOpenHelper.getInstance(this).updateTable(LogsEntry.TABLE_NAME,
+                        values, LogsEntry._ID, new String[] {Long.toString(rowID)});
             }
         }
     }

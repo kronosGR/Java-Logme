@@ -14,4 +14,7 @@
     <string name="menu_share">Share</string>
     <string name="menu_send">Send</string>
     <string name="log_activity_label">Add Log</string>
+    <string name="video_activity_label">Video</string>
+    <string name="image_activity_label">Image</string>
+    <string name="audio_activity_label">Audio</string>
 </resources>
