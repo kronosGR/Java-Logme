@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.util.List;
@@ -91,7 +92,17 @@ public class ExtrasAdapter extends RecyclerView.Adapter<ExtrasAdapter.ViewHolder
                         context.startActivity(VideoActivity.makeIntentToPlayVideo(context, extra.getUrl()));
                         break;
                     case 4: //LOCATION
-
+                        String[] location = extra.getUrl().split("|");
+                        String latitude = location[0];
+                        String longitude = location[1];
+                        Uri locationUri = Uri.parse("geo:" + latitude + "," + longitude);
+                        Intent intent = new Intent(Intent.ACTION_VIEW, locationUri);
+                        //intent.setPackage("com.google.android.apps.maps");
+                        if (intent.resolveActivity(context.getPackageManager()) != null){
+                            context.startActivity(intent);
+                        } else {
+                            Toast.makeText(context, "You need a map application to view the location",Toast.LENGTH_SHORT).show();
+                        }
                         break;
                 }
             }

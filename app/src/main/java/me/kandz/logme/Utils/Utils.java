@@ -2,6 +2,7 @@ package me.kandz.logme.Utils;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -56,5 +57,26 @@ public class Utils {
         Date d = new Date();
         SimpleDateFormat sdf = new SimpleDateFormat("E");
         return sdf.format(d);
+    }
+
+    /**
+     * checks if gps and network providers are on
+     * @param context
+     * @return true if is on
+     */
+    public static boolean checkIfLocationIsOn(Context context){
+        LocationManager lm =(LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        boolean gps_enabled = false;
+        //boolean network_enabled = false;
+
+        try{
+            gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        } catch (Exception ex){}
+
+      //  try{
+      //      gps_enabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+      //  } catch (Exception ex){}
+
+        return gps_enabled;
     }
 }
