@@ -48,6 +48,7 @@ public class LogActivity extends AppCompatActivity implements LocationListener {
     public static final int REQUEST_CODE_IMAGE_ACTIVITY = 2;
     public static final int REQUEST_CODE_VIDEO_ACTIVITY = 3;
     public static final int REQUEST_CODE_PERMISSION_FOR_LOCATION = 456;
+    public static final String POSITION = "position";
     private TextView dateTxt;
     private TextView timeTxt;
     private TextView dayTxt;
@@ -64,6 +65,9 @@ public class LogActivity extends AppCompatActivity implements LocationListener {
     private Logs updateLogs;
     private ConstraintLayout constraintLayout;
     private LocationManager locationManager;
+    private int position;
+    private Menu mMenu;
+    private MenuItem saveItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,11 +78,12 @@ public class LogActivity extends AppCompatActivity implements LocationListener {
         if (intent.getParcelableExtra(LOGS_OBJECT) !=null){
             updateLog = true;
             updateLogs = intent.getParcelableExtra(LOGS_OBJECT);
+            position = intent.getIntExtra(POSITION, 0);
             intializeActivity();
             updateValues();
         } else {
             intializeActivity();
-            createNewRecord();
+           // createNewRecord();
         }
     }
 
@@ -99,7 +104,7 @@ public class LogActivity extends AppCompatActivity implements LocationListener {
     /**
      * create a new record with only date, day and time and all the booleans false
      */
-    private void createNewRecord() {
+   /* private void createNewRecord() {
         ContentValues values = new ContentValues();
         values.put(LogsEntry.COL_DATO, dateTxt.getText().toString());
         values.put(LogsEntry.COL_DAY, dayTxt.getText().toString());
@@ -110,7 +115,7 @@ public class LogActivity extends AppCompatActivity implements LocationListener {
         values.put(LogsEntry.COL_LOCATION, "FALSE");
         rowID = LogSqlLiteOpenHelper.getInstance(this).insertToTable(LogsEntry.TABLE_NAME,  values);
     }
-
+*/
     /**
      * get the view references and setonclick listeners to the buttons
      */
@@ -205,6 +210,7 @@ public class LogActivity extends AppCompatActivity implements LocationListener {
      */
     private void getLocationOfTheDevice() {
         Toast.makeText(this, "Please wait...", Toast.LENGTH_SHORT).show();
+        saveItem.setVisible(false);
         try {
             locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 5, this);
@@ -279,6 +285,7 @@ public class LogActivity extends AppCompatActivity implements LocationListener {
         recyclerView.setLayoutManager(linearLayoutManager);
         List<Extras> extras = LogSqlLiteOpenHelper.getInstance(this).readExtras(rowID);
         extrasAdapter = new ExtrasAdapter(this, extras, constraintLayout);
+
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new SwipeToDelete(extrasAdapter));
         itemTouchHelper.attachToRecyclerView(recyclerView);
         recyclerView.setAdapter(extrasAdapter);
@@ -301,23 +308,22 @@ public class LogActivity extends AppCompatActivity implements LocationListener {
                 values.put(LogsEntry.COL_DETAILS, detailsEdit.getText().toString());
                 LogSqlLiteOpenHelper.getInstance(this).updateTable(LogsEntry.TABLE_NAME,
                         values,LogsEntry._ID, new String [] {Long.toString(rowID)});
-                finish();
-                return true;
-            case R.id.log_menu_cancel:
-                if (!updateLog) {
-                    //LogSqlLiteOpenHelper.getInstance(this).deleteRecord(LogsEntry.TABLE_NAME, LogsEntry._ID, new String[]{Long.toString(rowID)});
-                    //Toast.makeText(this, "Log cancelled and deleted.", Toast.LENGTH_LONG).show();
-                    Toast.makeText(this, "Text changes haven't been saved.", Toast.LENGTH_SHORT).show();
-                }
-                else {
-                    Toast.makeText(this, "Text changes haven't been saved.", Toast.LENGTH_SHORT).show();
-                }
+                Intent intent = new Intent();
+                intent.putExtra("rowID", rowID);
+                intent.putExtra(POSITION,position);
+                setResult(RESULT_OK, intent);
                 finish();
                 return true;
         }
         return false;
     }
 
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        mMenu = menu;
+        saveItem = mMenu.findItem(R.id.log_menu_save);
+        return super.onPrepareOptionsMenu(menu);
+    }
 
     /**
      * set the time, day and date on the activity
@@ -352,6 +358,19 @@ public class LogActivity extends AppCompatActivity implements LocationListener {
     }
 
     /**
+     * create an intent passing as extra a logs object and position
+     * @param context
+     * @param log that will be passed as extra
+     * @return the created intent
+     */
+    public static Intent makeIntentForUpdateWithPosition(Context context, Logs log, int position){
+        Intent intent = new Intent(context, LogActivity.class);
+        intent.putExtra(LOGS_OBJECT, log);
+        intent.putExtra(POSITION, position);
+        return intent;
+    }
+
+    /**
      * save the location to the DB
      * @param longtitude
      * @param latitude
@@ -380,6 +399,9 @@ public class LogActivity extends AppCompatActivity implements LocationListener {
         String longitude = Double.toString(location.getLongitude());
         String latitude = Double.toString(location.getLatitude());
         saveLocationToDB(longitude,latitude);
+        locationManager.removeUpdates(this);
+        locationManager = null;
+        saveItem.setVisible(true);
     }
 
     @Override

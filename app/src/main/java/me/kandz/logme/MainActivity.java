@@ -1,10 +1,15 @@
 package me.kandz.logme;
 
+import android.content.ContentValues;
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.View;
 import android.support.v4.view.GravityCompat;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -15,6 +20,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,13 +28,20 @@ import java.util.List;
 import me.kandz.logme.Database.LogContract.LogsEntry;
 import me.kandz.logme.Database.LogSqlLiteOpenHelper;
 import me.kandz.logme.Database.LogsAdapter;
+import me.kandz.logme.Database.SwipeToDeleteLogs;
 import me.kandz.logme.Utils.Logs;
+import me.kandz.logme.Utils.Utils;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     private RecyclerView recyclerView;
     private LogsAdapter logsAdapter;
+    private TextView emptyTextView;
+    private ConstraintLayout constraintLayout;
+    public static int requestCodeLogActivity = 1;
+    private List<Logs> logs;
+    private Long rowID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +54,23 @@ public class MainActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-               startActivity(LogActivity.makeIntentForUpdate(getApplicationContext()));
+                String dato = Utils.getDate();
+                String day = Utils.getDay();
+                String time =  Utils.getTime();
+                ContentValues values = new ContentValues();
+                values.put(LogsEntry.COL_DATO, dato);
+                values.put(LogsEntry.COL_DAY, day);
+                values.put(LogsEntry.COL_TIME, time);
+                values.put(LogsEntry.COL_IMAGE, "FALSE");
+                values.put(LogsEntry.COL_VIDEO, "FALSE");
+                values.put(LogsEntry.COL_AUDIO, "FALSE");
+                values.put(LogsEntry.COL_LOCATION, "FALSE");
+                long rowID = LogSqlLiteOpenHelper.getInstance(getApplicationContext()).insertToTable(LogsEntry.TABLE_NAME,  values);
+                Logs log = new Logs(
+                        (int)rowID, "", "", dato, day, time, false, false, false, false);
+                logs.add(0, log);
+                logsAdapter.notifyItemInserted(0);
+                startActivityForResult(LogActivity.makeIntentForUpdate(getApplicationContext(), log), requestCodeLogActivity);
             }
         });
 
@@ -55,8 +84,35 @@ public class MainActivity extends AppCompatActivity
         toggle.syncState();
         navigationView.setNavigationItemSelectedListener(this);
 
+        emptyTextView = (TextView) findViewById(R.id.emptyTextView);
+        constraintLayout = (ConstraintLayout) findViewById(R.id.logsConstraintLayout);
         initializeRecyclerView();
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (requestCode == requestCodeLogActivity){
+            if (resultCode == RESULT_OK){
+                rowID = data.getLongExtra("rowID", 0);
+                int position = data.getIntExtra("position", 0);
+                updateOneLog(position);
+            }
+        }
+    }
+
+    /**
+     * updates the log that added or updated with the rowID
+     */
+    private void updateOneLog(int position) {
+        Logs log = LogSqlLiteOpenHelper.getInstance(this).getALog(rowID);
+        logs.remove(position);
+        logs.add(position, log);
+        logsAdapter.notifyItemInserted(position);
+        logsAdapter.notifyDataSetChanged();
+        hideMsgShowRec();
+    }
+
+
 
     /**
      * initialiaze the recycler view
@@ -66,7 +122,8 @@ public class MainActivity extends AppCompatActivity
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(linearLayoutManager);
 
-        List<Logs> logs = new ArrayList<>();
+
+        logs = new ArrayList<>();
         Cursor cursor = LogSqlLiteOpenHelper.getInstance(this).getTable(LogsEntry.TABLE_NAME, LogsEntry._ID, "DESC");
 
         int idPOS = cursor.getColumnIndex(LogsEntry._ID);
@@ -98,14 +155,42 @@ public class MainActivity extends AppCompatActivity
             logs.add(tmpLog);
         }
 
-        logsAdapter = new LogsAdapter(this, logs);
+        logsAdapter = new LogsAdapter(this, logs, constraintLayout);
+
+        //initiate itemtouchHelper and attach it to the recyclerView
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new SwipeToDeleteLogs(logsAdapter));
+        itemTouchHelper.attachToRecyclerView(recyclerView);
+
         recyclerView.setAdapter(logsAdapter);
+        if (logs.size() == 0){
+            hideRecShowMsg();
+        } else {
+            hideMsgShowRec();
+        }
+    }
+
+
+    /**
+     * hides the recycler view and shows the empty message
+     */
+    private void hideRecShowMsg() {
+        recyclerView.setVisibility(View.GONE);
+        emptyTextView.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * hides the empty Message and shows the recyclerView
+     */
+    private void hideMsgShowRec() {
+        recyclerView.setVisibility(View.VISIBLE);
+        emptyTextView.setVisibility(View.GONE);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        initializeRecyclerView();
+        logsAdapter.notifyDataSetChanged();
+       // initializeRecyclerView();
     }
 
     @Override
@@ -147,16 +232,16 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_home) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_tools) {
-
-        } else if (id == R.id.nav_share) {
-
+        if (id == R.id.nav_logs) {
+            // Show the logs list
+        } else if (id == R.id.nav_images) {
+            //show the images list
+        } else if (id == R.id.nav_audio) {
+            //show the audio list
+        } else if (id == R.id.nav_videos) {
+            //show the videos list
+        } else if (id == R.id.nav_locations) {
+            //show the location list
         } else if (id == R.id.nav_send) {
 
         }
