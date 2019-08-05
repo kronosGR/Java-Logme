@@ -106,6 +106,19 @@ public class LogSqlLiteOpenHelper extends SQLiteOpenHelper {
     }
 
     /**
+     * get from Extras Table a record with where clause logID and typeID
+     * @param logID
+     * @param typeID
+     * @return cursor with results
+     */
+    public Cursor getExtrasWithIdAndType(String logID, String typeID){
+        SQLiteDatabase db = getReadableDatabase();
+        String selection = ExtrasEntry.COL_LOG_ID + " = ? AND " + ExtrasEntry.COL_TYPE_ID+ " = ?";
+        return db.query(ExtrasEntry.TABLE_NAME, null, selection, new String[] { logID, typeID}
+            ,null, null, null);
+
+    }
+    /**
      * get all the records for a table for a column = value
      *
      * @param tableName      the table it will get the records

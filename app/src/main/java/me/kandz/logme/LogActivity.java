@@ -322,6 +322,7 @@ public class LogActivity extends AppCompatActivity implements LocationListener {
     public boolean onPrepareOptionsMenu(Menu menu) {
         mMenu = menu;
         saveItem = mMenu.findItem(R.id.log_menu_save);
+        extrasAdapter.setSaveItem(saveItem);
         return super.onPrepareOptionsMenu(menu);
     }
 

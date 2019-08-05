@@ -1,5 +1,6 @@
 package me.kandz.logme.Database;
 
+import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -10,7 +11,10 @@ import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -25,8 +29,10 @@ import me.kandz.logme.Database.LogContract.ExtrasEntry;
 import me.kandz.logme.Database.LogContract.LogsEntry;
 import me.kandz.logme.ImageActivity;
 import me.kandz.logme.LogActivity;
+import me.kandz.logme.MainActivity;
 import me.kandz.logme.R;
 import me.kandz.logme.Utils.Extras;
+import me.kandz.logme.Utils.Logs;
 import me.kandz.logme.VideoActivity;
 
 public class ExtrasAdapter extends RecyclerView.Adapter<ExtrasAdapter.ViewHolder> {
@@ -37,12 +43,25 @@ public class ExtrasAdapter extends RecyclerView.Adapter<ExtrasAdapter.ViewHolder
     private Extras recentlyDeleted;
     private int recentlyDeletedPosition;
     private ConstraintLayout mConstraintLayout;
+    private List<Logs> logs;
+    private boolean fromLog = false;
+    private MenuItem saveItem;
+    private boolean undoclicked;
 
     public ExtrasAdapter(Context context, List<Extras> extras, ConstraintLayout constraintLayout) {
         this.context = context;
         this.extras = extras;
         mConstraintLayout = constraintLayout;
         inflater = LayoutInflater.from(context);
+        fromLog = true;
+    }
+
+    public ExtrasAdapter(Context context, List<Extras> extras, ConstraintLayout constraintLayout, List<Logs> mLogs) {
+        this.context = context;
+        this.extras = extras;
+        mConstraintLayout = constraintLayout;
+        inflater = LayoutInflater.from(context);
+        logs = mLogs;
     }
 
     /**
@@ -53,6 +72,10 @@ public class ExtrasAdapter extends RecyclerView.Adapter<ExtrasAdapter.ViewHolder
         return context;
     }
 
+    public void setSaveItem(MenuItem saveItem) {
+        this.saveItem = saveItem;
+    }
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
@@ -61,7 +84,7 @@ public class ExtrasAdapter extends RecyclerView.Adapter<ExtrasAdapter.ViewHolder
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder viewHolder, int i) {
+    public void onBindViewHolder(@NonNull final ViewHolder viewHolder, int i) {
         final Extras extra = extras.get(i);
         switch (extra.getTypeID()) {
             case 1:
@@ -107,6 +130,20 @@ public class ExtrasAdapter extends RecyclerView.Adapter<ExtrasAdapter.ViewHolder
                 }
             }
         });
+
+        if (!fromLog) {
+            viewHolder.extrasCardView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View view) {
+                    int logID = extra.getLogID();
+                    Logs tmpLog = LogSqlLiteOpenHelper.getInstance(context).getALog(logID);
+                    int position = findLocation(tmpLog);
+                    ((Activity) context).startActivityForResult(LogActivity.makeIntentForUpdateWithPosition(context,
+                            tmpLog, position), MainActivity.requestCodeLogActivity);
+                    return true;
+                }
+            });
+        }
     }
 
     @Override
@@ -119,6 +156,8 @@ public class ExtrasAdapter extends RecyclerView.Adapter<ExtrasAdapter.ViewHolder
      * @param position the position of the item to be deleted
      */
     public void deleteItem(int position) {
+        saveItem.setVisible(false);
+
         final int finalPosition = position;
         recentlyDeleted = extras.get(position);
         recentlyDeletedPosition = position;
@@ -133,7 +172,8 @@ public class ExtrasAdapter extends RecyclerView.Adapter<ExtrasAdapter.ViewHolder
                 extras.add(recentlyDeletedPosition,
                         recentlyDeleted);
                 notifyItemInserted(recentlyDeletedPosition);
-
+                saveItem.setVisible(true);
+                undoclicked = true;
             }
         });
 
@@ -143,62 +183,74 @@ public class ExtrasAdapter extends RecyclerView.Adapter<ExtrasAdapter.ViewHolder
             public void onDismissed(Snackbar transientBottomBar, int event) {
                 super.onDismissed(transientBottomBar, event);
 
-                String filename = recentlyDeleted.getUrl();
-                String typeId = Integer.toString(recentlyDeleted.getTypeID());
-                int ID = recentlyDeleted.getLogID();
+                if (!undoclicked) {
+                    String filename = recentlyDeleted.getUrl();
+                    String typeId = Integer.toString(recentlyDeleted.getTypeID());
+                    int ID = recentlyDeleted.getLogID();
 
-                // delete form disk
-                File fileToDelete = new File(filename);
-                if (fileToDelete.exists())
-                    fileToDelete.delete();
+                    // delete form disk
+                    File fileToDelete = new File(filename);
+                    if (fileToDelete.exists())
+                        fileToDelete.delete();
 
-                // delete from the database
-                LogSqlLiteOpenHelper.getInstance(context).deleteRecord(
-                        ExtrasEntry.TABLE_NAME
-                        , ExtrasEntry.COL_URL
-                        , new String[]{filename}
-                );
+                    // delete from the database
+                    LogSqlLiteOpenHelper.getInstance(context).deleteRecord(
+                            ExtrasEntry.TABLE_NAME
+                            , ExtrasEntry.COL_URL
+                            , new String[]{filename}
+                    );
 
-                //check the typeId and set the columnName for the delete operation
-                String columnName = "";
-                switch (typeId) {
-                    case "1":
-                        columnName = LogsEntry.COL_IMAGE;
-                        break;
-                    case "2":
-                        columnName = LogsEntry.COL_AUDIO;
-                        break;
-                    case "3":
-                        columnName = LogsEntry.COL_VIDEO;
-                        break;
-                    case "4":
-                        columnName = LogsEntry.COL_LOCATION;
-                        break;
+                    //check the typeId and set the columnName for the delete operation
+                    String columnName = "";
+                    switch (typeId) {
+                        case "1":
+                            columnName = LogsEntry.COL_IMAGE;
+                            break;
+                        case "2":
+                            columnName = LogsEntry.COL_AUDIO;
+                            break;
+                        case "3":
+                            columnName = LogsEntry.COL_VIDEO;
+                            break;
+                        case "4":
+                            columnName = LogsEntry.COL_LOCATION;
+                            break;
 
-                }
+                    }
 
-                ContentValues values = new ContentValues();
-                //check if more the same type
-                Cursor cursor = LogSqlLiteOpenHelper.getInstance(context).getTableWithSelection(
-                        ExtrasEntry.TABLE_NAME, ExtrasEntry.COL_TYPE_ID, new String[]{typeId});
+                    ContentValues values = new ContentValues();
+                    //check if more the same type
+                    Cursor cursor = LogSqlLiteOpenHelper.getInstance(context).getExtrasWithIdAndType(
+                            Integer.toString(ID), typeId);
 
-                int howMany = cursor.getCount();
-                if (howMany == 0) {
-                    //set to false
-                    values.put(columnName, "FALSe");
-                    int rows = LogSqlLiteOpenHelper.getInstance(context).updateTable(LogsEntry.TABLE_NAME,
-                            values, LogsEntry._ID, new String[]{Integer.toString(ID)});
-                } else {
+                    int howMany = cursor.getCount();
+                    if (howMany == 0) {
+                        //set to false
+                        values.put(columnName, "FALSe");
+                        int rows = LogSqlLiteOpenHelper.getInstance(context).updateTable(LogsEntry.TABLE_NAME,
+                                values, LogsEntry._ID, new String[]{Integer.toString(ID)});
+                    } else {
 
-                    values.put(columnName, "TRUE");
-                    int rows = LogSqlLiteOpenHelper.getInstance(context).updateTable(LogsEntry.TABLE_NAME,
-                            values, LogsEntry._ID, new String[]{Integer.toString(ID)});
+                        values.put(columnName, "TRUE");
+                        int rows = LogSqlLiteOpenHelper.getInstance(context).updateTable(LogsEntry.TABLE_NAME,
+                                values, LogsEntry._ID, new String[]{Integer.toString(ID)});
 
+                    }
+                    saveItem.setVisible(true);
                 }
             }
         });
         snackbar.show();
 
+    }
+
+    private int findLocation(Logs log){
+        int position = -1;
+        for (int i=0; i<logs.size(); i++){
+            if (logs.get(i).getID() == log.getID())
+                return i;
+        }
+        return position;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
