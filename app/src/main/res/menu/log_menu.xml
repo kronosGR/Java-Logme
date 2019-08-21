@@ -8,4 +8,10 @@
         android:orderInCategory="10"
         android:title="Save"
         app:showAsAction="always" />
+    <item
+        android:id="@+id/log_menu_export"
+        android:icon="@drawable/ic_export_black_24dp"
+        android:orderInCategory="20"
+        android:title="Export"
+        app:showAsAction="always"/>
 </menu>

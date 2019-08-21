@@ -10,13 +10,17 @@ import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Build;
+import android.os.StrictMode;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ShareCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.ImageViewCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.content.res.AppCompatResources;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Chronometer;
 import android.widget.ImageView;
@@ -343,5 +347,28 @@ public class AudioActivity extends AppCompatActivity {
         Intent intent = new Intent(context, AudioActivity.class);
         intent.putExtra(AUDIO_URL, url);
         return intent;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.extra_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.extra_menu_export) {
+
+            //strict mode ignores the uri exposure
+            StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+            StrictMode.setVmPolicy(builder.build());
+
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.setType("text/*");
+            intent.putExtra(Intent.EXTRA_TEXT, filename.substring(filename.lastIndexOf("/") +1 ));
+            intent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + filename));
+            startActivity(Intent.createChooser(intent, "Share Audio"));
+        }
+        return true;
     }
 }

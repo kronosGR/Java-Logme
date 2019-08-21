@@ -52,6 +52,12 @@ public class MainActivity extends AppCompatActivity
     private List<Extras> extras;
     private NavigationView navigationView;
 
+    /**
+     * //TODO Features
+     * backup db to dropbox
+     * restore db from dropbox
+     */
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,7 +85,7 @@ public class MainActivity extends AppCompatActivity
                         (int)rowID, "", "", dato, day, time, false, false, false, false);
                 logs.add(0, log);
                 logsAdapter.notifyItemInserted(0);
-                startActivityForResult(LogActivity.makeIntentForUpdate(getApplicationContext(), log), requestCodeLogActivity);
+                startActivityForResult(LogActivity.makeIntentForNew(getApplicationContext(), log), requestCodeLogActivity);
             }
         });
 

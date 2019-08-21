@@ -10,9 +10,12 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ShareCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -47,7 +50,8 @@ public class VideoActivity extends AppCompatActivity {
             enablePlayImageView();
             enableSaveImageView();
             saveVideo.setImageResource(R.drawable.ic_cancel_black_24dp);
-            videoView.setVideoURI(Uri.parse(intent.getStringExtra(VIDEO_URL)));
+            uri1 = Uri.parse(intent.getStringExtra(VIDEO_URL));
+            videoView.setVideoURI(uri1);
         } else {
             initializeViews();
             checkPermissions();
@@ -232,5 +236,28 @@ public class VideoActivity extends AppCompatActivity {
         Intent intent = new Intent(context, VideoActivity.class);
         intent.putExtra(VIDEO_URL, url);
         return intent;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.extra_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.extra_menu_export) {
+
+            //strict mode ignores the uri exposure
+            StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+            StrictMode.setVmPolicy(builder.build());
+
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.setType("text/*");
+            intent.putExtra(Intent.EXTRA_TEXT, uri1.toString().substring(uri1.toString().lastIndexOf("/") +1 ));
+            intent.putExtra(Intent.EXTRA_STREAM, uri1);
+            startActivity(Intent.createChooser(intent, "Share Video"));
+        }
+        return true;
     }
 }

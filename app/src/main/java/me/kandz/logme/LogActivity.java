@@ -49,6 +49,7 @@ public class LogActivity extends AppCompatActivity implements LocationListener {
     public static final int REQUEST_CODE_VIDEO_ACTIVITY = 3;
     public static final int REQUEST_CODE_PERMISSION_FOR_LOCATION = 456;
     public static final String POSITION = "position";
+    public static final String NEW_LOG = "newLog";
     private TextView dateTxt;
     private TextView timeTxt;
     private TextView dayTxt;
@@ -68,6 +69,7 @@ public class LogActivity extends AppCompatActivity implements LocationListener {
     private int position;
     private Menu mMenu;
     private MenuItem saveItem;
+    private MenuItem mExportItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,11 +78,14 @@ public class LogActivity extends AppCompatActivity implements LocationListener {
 
         Intent intent = getIntent();
         if (intent.getParcelableExtra(LOGS_OBJECT) !=null){
-            updateLog = true;
             updateLogs = intent.getParcelableExtra(LOGS_OBJECT);
             position = intent.getIntExtra(POSITION, 0);
             intializeActivity();
             updateValues();
+            if (intent.getBooleanExtra(NEW_LOG,false))
+                updateLog = false;
+            else
+                updateLog = true;
         } else {
             intializeActivity();
            // createNewRecord();
@@ -314,6 +319,9 @@ public class LogActivity extends AppCompatActivity implements LocationListener {
                 setResult(RESULT_OK, intent);
                 finish();
                 return true;
+            case R.id.log_menu_export:
+                startActivity(ExportLogActivity.makeIntent(this, updateLogs));
+                return true;
         }
         return false;
     }
@@ -323,6 +331,11 @@ public class LogActivity extends AppCompatActivity implements LocationListener {
         mMenu = menu;
         saveItem = mMenu.findItem(R.id.log_menu_save);
         extrasAdapter.setSaveItem(saveItem);
+        mExportItem = mMenu.findItem(R.id.log_menu_export);
+        if (updateLog)
+            mExportItem.setVisible(true);
+        else
+            mExportItem.setVisible(false);
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -338,25 +351,18 @@ public class LogActivity extends AppCompatActivity implements LocationListener {
     }
 
     /**
-     * create the intent for this activity
-     * @param context
-     * @return the intent
-     */
-    public static Intent makeIntentForUpdate(Context context){
-        return new Intent(context, LogActivity.class);
-    }
-
-    /**
      * create an intent passing as extra a logs object
      * @param context
      * @param log that will be passed as extra
      * @return the created intent
      */
-    public static Intent makeIntentForUpdate(Context context, Logs log){
+    public static Intent makeIntentForNew(Context context, Logs log){
         Intent intent = new Intent(context, LogActivity.class);
         intent.putExtra(LOGS_OBJECT, log);
+        intent.putExtra(NEW_LOG,true);
         return intent;
     }
+
 
     /**
      * create an intent passing as extra a logs object and position
