@@ -19,7 +19,7 @@ public class LogSqlLiteOpenHelper extends SQLiteOpenHelper {
 
     private static LogSqlLiteOpenHelper instance;
 
-    private static final String DATABASE_NAME = "logme.db";
+    public static final String DATABASE_NAME = "logme.db";
     private static final int DATABASE_VERSION = 1;
     private final Context mContext;
 

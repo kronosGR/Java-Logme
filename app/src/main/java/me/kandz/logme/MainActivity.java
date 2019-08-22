@@ -1,8 +1,11 @@
 package me.kandz.logme;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
@@ -20,14 +23,15 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
-import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import java.io.File;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 import me.kandz.logme.Database.ExtrasAdapter;
-import me.kandz.logme.Database.LogContract;
 import me.kandz.logme.Database.LogContract.ExtrasEntry;
 import me.kandz.logme.Database.LogContract.LogsEntry;
 import me.kandz.logme.Database.LogSqlLiteOpenHelper;
@@ -40,6 +44,11 @@ import me.kandz.logme.Utils.Utils;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
+    public static final String LOG_PREFERECES = "log_prefereces";
+    public static final String PREF_FILES_SIZE = "files_size";
+    public static final String PREF_DB_SIZE = "db_size";
+    public static final String TOTAL_SIZE_OF_DATABASE = "Database: ";
+    public static final String TOTAL_SIZE_OF_FILES = "Files: ";
     private RecyclerView recyclerView;
     private LogsAdapter logsAdapter;
     private TextView emptyTextView;
@@ -51,11 +60,17 @@ public class MainActivity extends AppCompatActivity
     private RecyclerView extrasMainRecyclerView;
     private List<Extras> extras;
     private NavigationView navigationView;
+    private File sRoot;
+    private File sAppDirectory;
+    private File sDatabasePath;
+    private long sSize;
+    private long sDbSize;
+    private Menu mDrawerMenu;
+    private MenuItem mFileSize;
+    private MenuItem mDbSize;
 
     /**
-     * //TODO Features
-     * backup db to dropbox
-     * restore db from dropbox
+     *TODO edit the navigation drawer header
      */
 
     @Override
@@ -93,6 +108,10 @@ public class MainActivity extends AppCompatActivity
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         navigationView = findViewById(R.id.nav_view);
+        mDrawerMenu = navigationView.getMenu();
+        mFileSize = mDrawerMenu.findItem(R.id.nav_total_size);
+        mDbSize = mDrawerMenu.findItem(R.id.nav_total_size_db);
+
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
@@ -103,6 +122,14 @@ public class MainActivity extends AppCompatActivity
         constraintLayout = (ConstraintLayout) findViewById(R.id.logsConstraintLayout);
         extrasMainRecyclerView = (RecyclerView) findViewById(R.id.extrasMainRecyclerView);
         initializeRecyclerView();
+
+        //set the size of the files and the db to navigation drawer
+        SharedPreferences sharedPreferences = this.getSharedPreferences(LOG_PREFERECES, MODE_PRIVATE);
+        long fSize = sharedPreferences.getLong(PREF_FILES_SIZE, 0);
+        long dbSize = sharedPreferences.getLong(PREF_DB_SIZE, 0);
+        mFileSize.setTitle(TOTAL_SIZE_OF_FILES + toKbMbGb(fSize));
+        mDbSize.setTitle(TOTAL_SIZE_OF_DATABASE + toKbMbGb(dbSize));
+
     }
 
     @Override
@@ -342,12 +369,112 @@ public class MainActivity extends AppCompatActivity
             extrasMainRecyclerView.setVisibility(View.VISIBLE);
             recyclerView.setVisibility(View.GONE);
             initializeRecyclerViewForExtras("4");
-        } else if (id == R.id.nav_send) {
+        } else if (id == R.id.nav_get_total_size){
+            getTotalSize();
+        }else if (id == R.id.nav_total_size){
+            //calculate the size of the files
+            sRoot = android.os.Environment.getExternalStorageDirectory();
+            sAppDirectory = new File(sRoot.getAbsolutePath() + "/LogMe");
+            CalculateFilesSize calcFiles = new CalculateFilesSize();
+            calcFiles.execute(sAppDirectory);
+        }else if (id == R.id.nav_total_size_db){
+            sRoot = android.os.Environment.getExternalStorageDirectory();
+            sAppDirectory = new File(sRoot.getAbsolutePath() + "/LogMe");
+
+            sDatabasePath = this.getDatabasePath(LogSqlLiteOpenHelper.DATABASE_NAME);
+            SharedPreferences sharedPreferences = this.getSharedPreferences(LOG_PREFERECES, this.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putLong(PREF_DB_SIZE, sDatabasePath.length());
+            editor.commit();
+            mDbSize.setTitle(TOTAL_SIZE_OF_DATABASE + toKbMbGb(sDatabasePath.length()));
+        }
+        else if (id == R.id.nav_backup_dropbox) {
+            //TODO backup db and files to dropbox
+            //0. if user doesnot have dropbox account use a referall link
+            //1. zip all files in logme and the db file
+
+            //2. upload to dropbox
+
+        } else if (id == R.id.nav_restore_dropbox){
+            //TODO  restore db and files from dropbox
+            //1.upload from dropbox the zipped file
+
+            //2. export the files in the logme directory
+
 
         }
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    /**
+     * get the total size of the files
+     */
+    private void getTotalSize() {
+        sRoot = android.os.Environment.getExternalStorageDirectory();
+        sAppDirectory = new File(sRoot.getAbsolutePath() + "/LogMe");
+
+        //calculate the size of the files
+        CalculateFilesSize calcFiles = new CalculateFilesSize();
+        calcFiles.execute(sAppDirectory);
+
+        sDatabasePath = this.getDatabasePath(LogSqlLiteOpenHelper.DATABASE_NAME);
+        SharedPreferences sharedPreferences = this.getSharedPreferences(LOG_PREFERECES, this.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putLong(PREF_DB_SIZE, sDatabasePath.length());
+        editor.commit();
+        mDbSize.setTitle(TOTAL_SIZE_OF_DATABASE + toKbMbGb(sDatabasePath.length()));
+    }
+
+    /**
+     * return the file size in human readable format
+     * @param size
+     * @return
+     */
+    private String toKbMbGb(long size){
+        String toReturn ="";
+        double kb = size/1024.0;
+        double mb = size/1048576.0;
+        double gb = size/1073741824.0;
+
+        DecimalFormat decimalFormat = new DecimalFormat("0.00");
+
+        if (kb >= 1 && mb<1  )
+            toReturn = decimalFormat.format(kb).concat("KB");
+        else if (mb >= 1 && gb <1  )
+            toReturn = decimalFormat.format(mb).concat("MB");
+        else if (gb >= 1)
+            toReturn = decimalFormat.format(gb).concat("GB");
+
+        return toReturn;
+    }
+
+    /**
+     * Asynctask class to calculate the size of the files
+     */
+    private class CalculateFilesSize extends AsyncTask<File , Void, Long>{
+
+        @Override
+        protected void onPreExecute() {
+            Toast.makeText(getApplicationContext(), "Please Wait, calculating...", Toast.LENGTH_SHORT).show();
+
+        }
+
+        @Override
+        protected Long doInBackground(File... files) {
+            return Utils.getDirSize(files[0]);
+        }
+
+        @Override
+        protected void onPostExecute(Long aLong) {
+            Toast.makeText(getApplicationContext(), "Calculation finished!", Toast.LENGTH_SHORT).show();
+            SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences(LOG_PREFERECES, Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putLong(PREF_FILES_SIZE, aLong);
+            editor.commit();
+            mFileSize.setTitle(TOTAL_SIZE_OF_FILES + toKbMbGb(aLong));
+        }
     }
 }

@@ -27,9 +27,6 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 import me.kandz.logme.Database.ExtrasAdapter;
@@ -70,11 +67,18 @@ public class LogActivity extends AppCompatActivity implements LocationListener {
     private Menu mMenu;
     private MenuItem saveItem;
     private MenuItem mExportItem;
+    private static String sLatitude = null;
+    private static String sLongitude = null;
+    private static MenuItem mShareItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log);
+
+        //because they are static variable needs to be initialized.
+        sLongitude = null;
+        sLatitude = null;
 
         Intent intent = getIntent();
         if (intent.getParcelableExtra(LOGS_OBJECT) !=null){
@@ -294,7 +298,6 @@ public class LogActivity extends AppCompatActivity implements LocationListener {
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(new SwipeToDelete(extrasAdapter));
         itemTouchHelper.attachToRecyclerView(recyclerView);
         recyclerView.setAdapter(extrasAdapter);
-
     }
 
     @Override
@@ -322,6 +325,15 @@ public class LogActivity extends AppCompatActivity implements LocationListener {
             case R.id.log_menu_export:
                 startActivity(ExportLogActivity.makeIntent(this, updateLogs));
                 return true;
+            case R.id.log_menu_share_location:
+                Intent shareIntent = new Intent(Intent.ACTION_SEND);
+                shareIntent.setType("text/*");
+                String textToShare = "My location \n"
+                        + " Latitude :" + sLatitude
+                        + "\n - Longitude: " + sLongitude;
+                shareIntent.putExtra(Intent.EXTRA_TEXT, textToShare);
+                startActivity(shareIntent);
+                return true;
         }
         return false;
     }
@@ -336,7 +348,37 @@ public class LogActivity extends AppCompatActivity implements LocationListener {
             mExportItem.setVisible(true);
         else
             mExportItem.setVisible(false);
+
+        mShareItem = mMenu.findItem(R.id.log_menu_share_location);
+        checkForLocationInExtras();
+
         return super.onPrepareOptionsMenu(menu);
+    }
+
+    private void checkForLocationInExtras() {
+        if (sLatitude == null && sLongitude == null)
+            mShareItem.setVisible(false);
+        else
+            mShareItem.setVisible(true);
+    }
+
+    /**
+     * sets the sLatitude and sLongitude. This values will be used to share
+     * @param latitude
+     * @param longitude
+     */
+    public static void setLocation(String latitude, String longitude){
+        sLatitude = latitude;
+        sLongitude = longitude;
+        if (mShareItem != null)
+            mShareItem.setVisible(true);
+    }
+
+    /**
+     * disables the share button. Used to be called from the extrasadapter
+     */
+    public static void disableShareButton(){
+        mShareItem.setVisible(false);
     }
 
     /**
@@ -399,6 +441,10 @@ public class LogActivity extends AppCompatActivity implements LocationListener {
         values.put(LogsEntry.COL_LOCATION, "TRUE");
         int rows = LogSqlLiteOpenHelper.getInstance(this).updateTable(LogsEntry.TABLE_NAME,
                 values, LogsEntry._ID, new String[] {Long.toString(rowID)});
+
+        sLatitude = latitude;
+        sLongitude = longtitude;
+        checkForLocationInExtras();
     }
 
     @Override

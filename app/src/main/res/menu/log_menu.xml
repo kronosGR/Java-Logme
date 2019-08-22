@@ -14,4 +14,10 @@
         android:orderInCategory="20"
         android:title="Export"
         app:showAsAction="always"/>
+    <item
+        android:id="@+id/log_menu_share_location"
+        android:icon="@drawable/ic_share_location_24dp"
+        android:orderInCategory="30"
+        android:title="Share Location"
+        app:showAsAction="always"/>
 </menu>

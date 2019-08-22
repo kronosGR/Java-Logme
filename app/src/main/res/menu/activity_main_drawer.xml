@@ -26,16 +26,23 @@
             android:title="Locations" />
     </group>
 
-    <item android:title="Communicate">
+    <item android:title="Tools">
         <menu>
+            <item android:title="Get total size of all files"
+                android:id="@+id/nav_get_total_size"
+                android:icon="@drawable/ic_storage_black_24dp"/>
+            <item android:title="Total size of files: "
+                android:id="@+id/nav_total_size"/>
+            <item android:title="Total size of database: "
+                android:id="@+id/nav_total_size_db"/>
             <item
-                android:id="@+id/nav_share"
-                android:icon="@drawable/ic_menu_share"
-                android:title="Share" />
+                android:id="@+id/nav_backup_dropbox"
+                android:icon="@drawable/ic_backup_black_24dp"
+                android:title="Backup - Dropbox" />
             <item
-                android:id="@+id/nav_send"
-                android:icon="@drawable/ic_menu_send"
-                android:title="Send" />
+                android:id="@+id/nav_restore_dropbox"
+                android:icon="@drawable/ic_restore_black_24dp"
+                android:title="Restore - Dropbox" />
         </menu>
     </item>
 

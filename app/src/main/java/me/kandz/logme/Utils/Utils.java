@@ -197,6 +197,27 @@ public class Utils {
         return filename;
     }
 
+    /**
+     * gets the size of a directory, including the files in the subdirectories
+     * @param dir the location
+     * @return the total size in long
+     */
+    public static long getDirSize(File dir){
+        if (dir.exists()){
+            long result =0;
+            File[] fileList = dir.listFiles();
+            for (int i = 0; i<fileList.length; i ++){
+                if (fileList[i].isDirectory()){
+                    result += getDirSize(fileList[i]);
+                } else {
+                    result += fileList[i].length();
+                }
+            }
+            return result;
+        }
+        return 0;
+    }
+
 
     /**
      * a class to create a zip file. The constructor creates the zip and the method

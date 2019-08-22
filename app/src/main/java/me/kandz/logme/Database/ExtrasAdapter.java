@@ -23,6 +23,7 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import me.kandz.logme.AudioActivity;
 import me.kandz.logme.Database.LogContract.ExtrasEntry;
@@ -98,6 +99,10 @@ public class ExtrasAdapter extends RecyclerView.Adapter<ExtrasAdapter.ViewHolder
                 break;
             case 4:
                 viewHolder.typeImageView.setImageResource(R.drawable.ic_location_black_24dp);
+                String[] location = extra.getUrl().split(Pattern.quote("|"));
+                String latitude = location[0];
+                String longitude = location[1];
+                LogActivity.setLocation(latitude,longitude);
                 break;
         }
         viewHolder.dateTimeTextView.setText(extra.getDato() + " - " + extra.getTime());
@@ -115,7 +120,7 @@ public class ExtrasAdapter extends RecyclerView.Adapter<ExtrasAdapter.ViewHolder
                         context.startActivity(VideoActivity.makeIntentToPlayVideo(context, extra.getUrl()));
                         break;
                     case 4: //LOCATION
-                        String[] location = extra.getUrl().split("|");
+                        String[] location = extra.getUrl().split(Pattern.quote("|"));
                         String latitude = location[0];
                         String longitude = location[1];
                         Uri locationUri = Uri.parse("geo:" + latitude + "," + longitude);
@@ -214,6 +219,7 @@ public class ExtrasAdapter extends RecyclerView.Adapter<ExtrasAdapter.ViewHolder
                             break;
                         case "4":
                             columnName = LogsEntry.COL_LOCATION;
+                            LogActivity.disableShareButton();
                             break;
 
                     }
