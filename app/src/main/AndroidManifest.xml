@@ -27,7 +27,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".ExportLogActivity"></activity>
+        <activity android:name=".ExportLogActivity"
+            android:screenOrientation="portrait" ></activity>
         <activity
             android:name=".VideoActivity"
             android:label="@string/video_activity_label"

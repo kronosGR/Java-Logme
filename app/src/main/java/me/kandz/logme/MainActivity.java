@@ -69,10 +69,6 @@ public class MainActivity extends AppCompatActivity
     private MenuItem mFileSize;
     private MenuItem mDbSize;
 
-    /**
-     *TODO edit the navigation drawer header
-     */
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -271,7 +267,7 @@ public class MainActivity extends AppCompatActivity
     private void hideRecShowMsg(String about) {
         recyclerView.setVisibility(View.GONE);
         emptyTextView.setVisibility(View.VISIBLE);
-        emptyTextView.setText("No " + about +" in the database. Click the add button to add a new log.");
+        emptyTextView.setText("No " + about +" in the database.");
     }
 
     /**
@@ -376,7 +372,11 @@ public class MainActivity extends AppCompatActivity
             sRoot = android.os.Environment.getExternalStorageDirectory();
             sAppDirectory = new File(sRoot.getAbsolutePath() + "/LogMe");
             CalculateFilesSize calcFiles = new CalculateFilesSize();
-            calcFiles.execute(sAppDirectory);
+            if (!sAppDirectory.exists()){
+                sAppDirectory.mkdirs();
+                calcFiles.execute(sAppDirectory);
+            }
+
         }else if (id == R.id.nav_total_size_db){
             sRoot = android.os.Environment.getExternalStorageDirectory();
             sAppDirectory = new File(sRoot.getAbsolutePath() + "/LogMe");
@@ -388,22 +388,6 @@ public class MainActivity extends AppCompatActivity
             editor.commit();
             mDbSize.setTitle(TOTAL_SIZE_OF_DATABASE + toKbMbGb(sDatabasePath.length()));
         }
-        else if (id == R.id.nav_backup_dropbox) {
-            //TODO backup db and files to dropbox
-            //0. if user doesnot have dropbox account use a referall link
-            //1. zip all files in logme and the db file
-
-            //2. upload to dropbox
-
-        } else if (id == R.id.nav_restore_dropbox){
-            //TODO  restore db and files from dropbox
-            //1.upload from dropbox the zipped file
-
-            //2. export the files in the logme directory
-
-
-        }
-
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
@@ -418,7 +402,10 @@ public class MainActivity extends AppCompatActivity
 
         //calculate the size of the files
         CalculateFilesSize calcFiles = new CalculateFilesSize();
-        calcFiles.execute(sAppDirectory);
+        if (!sAppDirectory.exists()){
+            sAppDirectory.mkdirs();
+            calcFiles.execute(sAppDirectory);
+        }
 
         sDatabasePath = this.getDatabasePath(LogSqlLiteOpenHelper.DATABASE_NAME);
         SharedPreferences sharedPreferences = this.getSharedPreferences(LOG_PREFERECES, this.MODE_PRIVATE);

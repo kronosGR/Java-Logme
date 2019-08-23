@@ -35,14 +35,14 @@
                 android:id="@+id/nav_total_size"/>
             <item android:title="Total size of database: "
                 android:id="@+id/nav_total_size_db"/>
-            <item
-                android:id="@+id/nav_backup_dropbox"
-                android:icon="@drawable/ic_backup_black_24dp"
-                android:title="Backup - Dropbox" />
-            <item
-                android:id="@+id/nav_restore_dropbox"
-                android:icon="@drawable/ic_restore_black_24dp"
-                android:title="Restore - Dropbox" />
+            <!--<item-->
+                <!--android:id="@+id/nav_backup_dropbox"-->
+                <!--android:icon="@drawable/ic_backup_black_24dp"-->
+                <!--android:title="Backup - Dropbox" />-->
+            <!--<item-->
+                <!--android:id="@+id/nav_restore_dropbox"-->
+                <!--android:icon="@drawable/ic_restore_black_24dp"-->
+                <!--android:title="Restore - Dropbox" />-->
         </menu>
     </item>
 

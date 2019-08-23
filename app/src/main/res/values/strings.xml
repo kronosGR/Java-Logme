@@ -1,5 +1,4 @@
-<resources>
-    <string name="app_name">LogMe</string>
+<resources>    <string name="app_name">LogMe</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="nav_header_title">Android Studio</string>
@@ -11,4 +10,6 @@
     <string name="video_activity_label">Video</string>
     <string name="image_activity_label">Image</string>
     <string name="audio_activity_label">Audio</string>
+
+
 </resources>
