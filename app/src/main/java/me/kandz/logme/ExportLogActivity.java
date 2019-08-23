@@ -62,6 +62,12 @@ public class ExportLogActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_export_log);
 
+        checkExternalStoragePermisssion();
+    }
+
+
+
+    private void initializeActivity() {
         extraFiles.clear();
         mContext = getApplicationContext();
 
@@ -108,7 +114,8 @@ public class ExportLogActivity extends AppCompatActivity {
         mExportImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                checkExternalStoragePermisssion();
+                //zip files
+                exportToZip();
             }
         });
 
@@ -136,8 +143,6 @@ public class ExportLogActivity extends AppCompatActivity {
         } else {
             finish();
         }
-
-
     }
 
     /**
@@ -170,8 +175,7 @@ public class ExportLogActivity extends AppCompatActivity {
                     Manifest.permission.READ_EXTERNAL_STORAGE
             }, PERMISSIONS_REQUEST_CODE);
         } else {
-            //zip files
-            exportToZip();
+            initializeActivity();
         }
     }
 
@@ -188,8 +192,7 @@ public class ExportLogActivity extends AppCompatActivity {
                 && grantResults[0] == PackageManager.PERMISSION_GRANTED
                 && grantResults[1] == PackageManager.PERMISSION_GRANTED){
 
-                //zip to files
-                exportToZip();
+                initializeActivity();
             } else {
                 Toast.makeText(this, "You need to give permissions so the app can export the files", Toast.LENGTH_SHORT).show();
                 finish();
