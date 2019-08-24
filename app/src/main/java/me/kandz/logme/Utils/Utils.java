@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.media.ExifInterface;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import java.io.BufferedInputStream;
@@ -21,8 +20,6 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
-import me.kandz.logme.Database.LogSqlLiteOpenHelper;
 
 public class Utils {
 

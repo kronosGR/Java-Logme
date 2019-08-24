@@ -1,8 +1,15 @@
-<resources>    <string name="app_name">LogMe</string>
+<resources>
+    <!--this banner-->
+    <!-- ca-app-pub-0717744179319214/4221284640 -->
+    <!--test banner-->
+    <!-- ca-app-pub-3940256099942544/6300978111 -->
+    <string name="admob_banner_id">ca-app-pub-0717744179319214/4221284640</string>
+
+    <string name="app_name">LogMe</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="nav_header_title">Android Studio</string>
-    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_title">LogMe</string>
+    <string name="nav_header_subtitle">Log everything</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
 
@@ -10,6 +17,8 @@
     <string name="video_activity_label">Video</string>
     <string name="image_activity_label">Image</string>
     <string name="audio_activity_label">Audio</string>
+
+
 
 
 </resources>
